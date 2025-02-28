@@ -1,0 +1,114 @@
+import React, { useEffect, useState, useRef } from "react";
+import Product from "./Product";
+import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from "react-icons/fa";
+import "./Store.css";
+
+const Store = ({ searchText }) => {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  let postPerPage = 12
+
+  const hasRun = useRef(false);
+  const hasRun1 = useRef(false);
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+    ProductCategory();
+  }, []);
+
+  useEffect(() => {
+    // if (hasRun1.current) return;
+    if(searchText){
+      handleApiCall();
+      hasRun1.current = false
+    }else{
+      hasRun1.current = true
+    }
+  }, [searchText])
+
+  useEffect(() => {
+    handleApiCall()
+  }, [])
+
+  const handleApiCall = async (filter) => {
+    await fetch("https://dummyjson.com/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (searchText) {
+          setProducts(data.products.filter((product) => product.title.toLowerCase().includes(searchText.toLowerCase()),));
+        } else if (filter) {
+          setProducts(data.products.filter((product) => filter === product.category));
+        } else {
+          setProducts(data.products);
+        }
+      });
+  };
+
+  const ProductCategory = () => {
+    fetch("https://dummyjson.com/products/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data));
+  };
+
+  const handleChange = (event) => {
+    const selected = event.target.value;
+    handleApiCall(selected);
+    setCurrentPage(1);
+  };
+
+  const lastIndex = currentPage * postPerPage;
+  const firstIndex = lastIndex - postPerPage;
+  const records = products.slice(firstIndex, lastIndex);
+  const totalPages = Math.ceil(products.length / postPerPage);
+
+  const paginate = (page) => setCurrentPage(page);
+
+  return (
+    <div className="home-container">
+      <select className="Dropdown" onChange={handleChange}>
+        <option value="">Select the Category</option>
+        {categories.map((category, index) => (
+          <option key={index} value={category.slug}>
+            {category.name}
+          </option>
+
+        ))}
+      </select>
+
+      <div className="product-grid">
+        {records.length > 0 ? (
+          records.map((product) => <Product key={product.id} product={product} />)
+        ) : (
+          <p>No products found.</p>
+        )}
+      </div>
+
+      {/* Pagination Section */}
+      {products.length > 0 && (
+        <div className="paginate">
+          <button disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
+            <FaArrowAltCircleLeft />
+          </button>
+
+          {new Array(totalPages).fill(0).map((_, index) => (
+            <button
+              key={index + 1}
+              className={currentPage === index + 1 ? "active" : ""}
+              onClick={() => paginate(index + 1)}
+            >
+              {index + 1}
+            </button>
+          ))}
+          
+          <button disabled={currentPage === totalPages} onClick={() => paginate(currentPage + 1)}>
+            <FaArrowAltCircleRight />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Store;
