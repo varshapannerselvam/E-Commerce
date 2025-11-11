@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef,useCallback } from "react";
 import Product from "./Product";
 import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from "react-icons/fa";
 import "./Store.css";
@@ -7,6 +7,7 @@ const Store = ({ searchText }) => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState("");
   let postPerPage = 12
 
   const hasRun = useRef(false);
@@ -28,23 +29,48 @@ const Store = ({ searchText }) => {
     }
   }, [searchText])
 
-  useEffect(() => {
-    handleApiCall()
-  }, [])
+  // useEffect(() => {
+  //   handleApiCall()
+  // }, [])
 
-  const handleApiCall = async (filter) => {
-    await fetch("https://dummyjson.com/products")
-      .then((res) => res.json())
-      .then((data) => {
-        if (searchText) {
-          setProducts(data.products.filter((product) => product.title.toLowerCase().includes(searchText.toLowerCase()),));
-        } else if (filter) {
-          setProducts(data.products.filter((product) => filter === product.category));
-        } else {
-          setProducts(data.products);
-        }
-      });
-  };
+  // const handleApiCall = async (filter) => {
+  //   await fetch("https://dummyjson.com/products")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       if (searchText) {
+  //         setProducts(data.products.filter((product) => product.title.toLowerCase().includes(searchText.toLowerCase()),));
+  //       } else if (filter) {
+  //         setProducts(data.products.filter((product) => filter === product.category));
+  //       } else {
+  //         setProducts(data.products);
+  //       }
+  //     });
+  // };
+  const handleApiCall = useCallback(async (filter) => {
+  const res = await fetch("https://dummyjson.com/products");
+  const data = await res.json();
+
+  let updatedProducts = data.products;
+
+  if (searchText) {
+    updatedProducts = updatedProducts.filter((product) =>
+      product.title.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }
+
+  if (filter) {
+    updatedProducts = updatedProducts.filter(
+      (product) => product.category === filter
+    );
+  }
+
+  setProducts(updatedProducts);
+
+}, [searchText]);
+
+useEffect(() => {
+  handleApiCall(filter);
+}, [handleApiCall, filter]);
 
   const ProductCategory = () => {
     fetch("https://dummyjson.com/products/categories")
@@ -52,9 +78,14 @@ const Store = ({ searchText }) => {
       .then((data) => setCategories(data));
   };
 
-  const handleChange = (event) => {
-    const selected = event.target.value;
-    handleApiCall(selected);
+  // const handleChange = (event) => {
+  //   const selected = event.target.value;
+  //   handleApiCall(selected);
+  //   setCurrentPage(1);
+  // };
+
+    const handleChange = (event) => {
+    setFilter(event.target.value);   // ✅ set filter state
     setCurrentPage(1);
   };
 
