@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
+    "caniuse-lite": "^1.0.30001754",
     "qrcode.react": "^4.2.0",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
